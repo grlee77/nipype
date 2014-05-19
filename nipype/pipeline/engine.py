@@ -57,7 +57,8 @@ from ..utils.filemanip import (save_json, FileNotFoundError,
 from .utils import (generate_expanded_graph, modify_paths,
                     export_graph, make_output_dir, write_workflow_prov,
                     clean_working_directory, format_dot, topological_sort,
-                    get_print_name, merge_dict, evaluate_connect_function)
+                    get_print_name, merge_dict, evaluate_connect_function,
+                    random_color_str)
 
 
 def _write_inputs(node):
@@ -1008,7 +1009,7 @@ connected.
         logger.debug('finished expanding workflow: %s', self)
 
     def _get_dot(self, prefix=None, hierarchy=None, colored=True,
-                 simple_form=True):
+                 simple_form=True, coloredges_by_node=False): #GRL: coloredges_by_node is not really by node in this case
         """Create a dot file with connection info
         """
         if prefix is None:
@@ -1055,6 +1056,8 @@ connected.
                                                    [subnode.fullname])
                         nodename = nodefullname.replace('.', '_')
                         subnodename = subnodefullname.replace('.', '_')
+                        if coloredges_by_node: #GRL
+                            dotlist.append("edge [color=" + random_color_str() + "]")
                         for _ in self._graph.get_edge_data(node,
                                                            subnode)['connect']:
                             dotlist.append('%s -> %s;' % (nodename,
@@ -1064,6 +1067,8 @@ connected.
         for u, v, d in self._graph.edges_iter(data=True):
             uname = '.'.join(hierarchy + [u.fullname])
             vname = '.'.join(hierarchy + [v.fullname])
+            if coloredges_by_node: #GRL
+               dotlist.append("edge [color=" + random_color_str() + "]")
             for src, dest in d['connect']:
                 uname1 = uname
                 vname1 = vname

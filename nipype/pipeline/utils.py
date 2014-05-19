@@ -145,6 +145,24 @@ def get_print_name(node, simple_form=True):
     return name
 
 
+def random_color_str(cmin=0x000000,cmax=0xc0c0c0):   #GRL
+    #constrain color to be between 0x      
+    color_code='"#{:06x}"'.format(np.random.randint(cmin,cmax))
+    return color_code    
+
+def find_source_node_changes(e):  #GRL
+    """
+    e=['a:b','a:c','a:d','b:f','g:a','g:b']
+    """
+    v_prev=e[0].split(':')[0]
+    change_idx=[]
+    for idx,v in enumerate(e[1::]):
+        v1=v.split(':')[0]   
+        if v1!=v_prev:
+            change_idx.append(idx+1)
+        v_prev=v1
+    return change_idx    
+
 def _create_dot_graph(graph, show_connectinfo=False, simple_form=True):
     """Create a graph that can be pickled.
 
@@ -163,7 +181,7 @@ def _create_dot_graph(graph, show_connectinfo=False, simple_form=True):
     return pklgraph
 
 
-def _write_detailed_dot(graph, dotfilename):
+def _write_detailed_dot(graph, dotfilename,coloredges_by_node=True): #GRL
     """Create a dot file with connection info
 
     digraph structs {
@@ -230,7 +248,13 @@ def _write_detailed_dot(graph, dotfilename):
                                              nodenamestr,
                                              outputstr)]
     # write edges
-    for edge in sorted(edges):
+    edges=sorted(edges)
+    if coloredges_by_node: #GRL
+        change_idx=find_source_node_changes(edges)
+        for idx in change_idx[-1::-1]:
+            edges.insert(idx,"edge [color=" + random_color_str() + "]")
+        
+    for edge in edges: #sorted(edges):  #GRL:  had to remove sorted(edges) for it to work with my coloring case
         text.append(edge)
     text.append('}')
     filep = open(dotfilename, 'wt')
